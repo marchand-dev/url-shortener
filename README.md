@@ -16,4 +16,3 @@ You can check the application.properties file if you need to change database nam
 
 ## TO-DO:
 1) Implementar algorítmo de novas tentativas em caso de colisão de hash  
-2) Refatorar e implementar o desacoplamento do model ShortUrl com a Entity.  
