@@ -26,12 +26,18 @@ public class ShortenUrlUseCaseImpl implements ShortenUrlUseCase {
 
     @Override
     public ShortUrl execute(Url url) throws CantCreateAliasException, ShortUrlAlreadyExistsException {
-        String alias = createAlias(url.getUrl());
+        String alias = null;
+        int attempt = 0;
+        int maxAttempts = 1000;
 
-        if (shortUrlAlreadyExists(alias)) {
-            String s = String.format("alias: %s já existe. tentativa para url %s", alias, url.getUrl());
-            throw new ShortUrlAlreadyExistsException(s);
-        }
+        do {
+            alias = createAlias(url.getUrl(), attempt);
+            attempt++;
+            if (attempt >= maxAttempts) {
+                String s = String.format("alias: %s já existe. tentativa para url %s", alias, url.getUrl());
+                throw new ShortUrlAlreadyExistsException(s);
+            }
+        } while (shortUrlAlreadyExists(alias));
 
         ShortUrl shortUrl = new ShortUrl();
         shortUrl.setShortUrl(alias);
@@ -40,8 +46,9 @@ public class ShortenUrlUseCaseImpl implements ShortenUrlUseCase {
         return shortUrlRepositoryGateway.save(shortUrl);
     }
 
-    private String createAlias(String url) throws CantCreateAliasException {
+    private String createAlias(String url, int salt) throws CantCreateAliasException {
         try {
+            url = url + "|" + salt;
             MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
             byte[] hashBytes = md.digest(url.getBytes(StandardCharsets.UTF_8));
             byte[] firstBytes = Arrays.copyOfRange(hashBytes, 0, 6); // 6 bytes = 48 bits
