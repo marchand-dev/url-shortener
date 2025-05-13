@@ -13,6 +13,3 @@ This API contains 3 methods:
 ## Requirements:  
 You must have a postgresql database running with the name "urlshortener" in the 5432 port  
 You can check the application.properties file if you need to change database name, url, port, username or password.  
-
-## TO-DO:
-1) Implementar algorítmo de novas tentativas em caso de colisão de hash  
