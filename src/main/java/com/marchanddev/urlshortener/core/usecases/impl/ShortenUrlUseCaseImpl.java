@@ -26,6 +26,11 @@ public class ShortenUrlUseCaseImpl implements ShortenUrlUseCase {
 
     @Override
     public ShortUrl execute(Url url) throws CantCreateAliasException, ShortUrlAlreadyExistsException {
+        String alias = tryCreateAliasUntilMaxAttempts(url);
+        return saveToRepository(url, alias);
+    }
+
+    private String tryCreateAliasUntilMaxAttempts(Url url) throws CantCreateAliasException, ShortUrlAlreadyExistsException {
         String alias = null;
         int attempt = 0;
         int maxAttempts = 1000;
@@ -38,12 +43,7 @@ public class ShortenUrlUseCaseImpl implements ShortenUrlUseCase {
                 throw new ShortUrlAlreadyExistsException(s);
             }
         } while (shortUrlAlreadyExists(alias));
-
-        ShortUrl shortUrl = new ShortUrl();
-        shortUrl.setShortUrl(alias);
-        shortUrl.setOriginalUrl(url.getUrl());
-        shortUrl.setCreatedAt(ZonedDateTime.now());
-        return shortUrlRepositoryGateway.save(shortUrl);
+        return alias;
     }
 
     private String createAlias(String url, int salt) throws CantCreateAliasException {
@@ -62,5 +62,13 @@ public class ShortenUrlUseCaseImpl implements ShortenUrlUseCase {
     private boolean shortUrlAlreadyExists(String shortUrl) {
         Optional<ShortUrl> existing = shortUrlRepositoryGateway.findByShortUrl(shortUrl);
         return existing.isPresent();
+    }
+
+    private ShortUrl saveToRepository(Url url, String alias) {
+        ShortUrl shortUrl = new ShortUrl();
+        shortUrl.setShortUrl(alias);
+        shortUrl.setOriginalUrl(url.getUrl());
+        shortUrl.setCreatedAt(ZonedDateTime.now());
+        return shortUrlRepositoryGateway.save(shortUrl);
     }
 }
